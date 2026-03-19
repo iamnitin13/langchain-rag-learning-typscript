@@ -5,24 +5,22 @@ import dotenv from 'dotenv';
 import { createRetriever } from "./retriever";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { Document } from "langchain";
+import { ChatHandler, chat } from "../utils/chat";
 
 dotenv.config();
 
-
-
-
-
 //prompt template
 const prompt = ChatPromptTemplate.fromMessages([
-    ["human", `You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
-Question: { question } 
-Context: { context } 
-Answer: `],
+    ["human",
+        `You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
+Question: {question}
+Context: {context}
+Answer:`],
 ]);
 
 //llm model legagcy TODO: install @langchain/google
 const llm = new ChatGoogleGenerativeAI({
-    model: process.env.MODEL_NAME!,
+    model: process.env.MODEL!,
     // maxOutputTokens: 500
 })
 
@@ -53,3 +51,14 @@ const generationChain = RunnableSequence.from([
     llm,
     outputParser
 ])
+
+
+// intergate chat handler on terminal
+const chatHandler: ChatHandler = async (question: string) => {
+    return {
+        answer: generationChain.stream({ question })
+    }
+}
+
+// start chat
+chat(chatHandler)
